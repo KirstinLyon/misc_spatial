@@ -9,8 +9,6 @@ if (length(missing_packages) > 0) {
     install.packages(missing_packages)
 }
 
-
-#library(sp)
 library(sf)
 library(tidyverse)
 library(glamr)
