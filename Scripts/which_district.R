@@ -23,6 +23,7 @@ shape_file <- "Data/districts/NEW_161_Districts.shp"
 coordinate_file <- "Data/sisma_us_gis.xlsx"
 output_folder <- "Dataout/"
 
+# FUNCTION -------------------------------------------------------------------------------------
 
 #' Use the SF package to find the snu and psnu for each coordinate. Flag any psnu that have 
 #' a different PSNU to expected.
@@ -55,7 +56,7 @@ check_coords_in_psnu <- function(shape_file, coordinate_file){
                sisma_snu     = orgunitlevel2,
                sisma_psnu    = orgunitlevel3) %>% 
         tidyr::drop_na()
-
+    
     
     # Convert facilities dataframe to sf object 
     facilities_sf <- sf::st_as_sf(x = facilities, 
@@ -67,6 +68,7 @@ check_coords_in_psnu <- function(shape_file, coordinate_file){
     district_info <- st_join(districts, facilities_sf) %>% 
         sf::st_drop_geometry()
     
+    
     #add a flag to check if the psnu is as expected
     output_file <- district_info %>% 
         mutate(check_psnu = case_when(sisma_psnuuid == shape_psnuuid ~ 0,
@@ -77,8 +79,10 @@ check_coords_in_psnu <- function(shape_file, coordinate_file){
                sisma_snuuid, sisma_snu, sisma_psnuuid, sisma_psnu)
     
     return(output_file)
+    
 }
 
+# Create datasets ----------------------------------------------------------------------
 
 all_data <- check_coords_in_psnu(shape_file, coordinate_file) %>% 
     write_excel_csv(glue::glue("{output_folder}all_data.csv"))
@@ -86,6 +90,4 @@ all_data <- check_coords_in_psnu(shape_file, coordinate_file) %>%
 wrong_psnu <- all_data %>% 
     filter(check_psnu == 1) %>% 
     write_excel_csv(glue::glue("{output_folder}check_psnu_gis.csv"))
-
-
 
