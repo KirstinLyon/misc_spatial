@@ -1,7 +1,7 @@
 library(sf)
 library(janitor)
 library(tidyverse)
-#https://chat.openai.com/c/fb4db39b-a409-4219-a0d4-4f0e37d06066
+
 
 
 PATH = "Data/provinces/MOz_Provinces.shp"
