@@ -2,80 +2,59 @@ library(sf)
 library(janitor)
 library(tidyverse)
 
+PATH <-  "Data/provinces/MOz_Provinces.shp"
+PROVINCES_TO_MERGE <- c("Maputo", "Cidade De Maputo")
+OUTPUT <- "Dataout/merged_province/"
 
 
-PATH = "Data/provinces/MOz_Provinces.shp"
-
-
+#' Create merged province spatial file
+#'
+#' @param province_df original spatial file with all provinces
+#' @param provinces  list of provinces to be merged
+#'
+#' @return a spatial file with provinces merged
+#' @export
+#'
+#' @examples
+merge_province <- function(province_df, provinces){
+    
+    temp <- province_df %>% 
+        filter(provincia %in% provinces) %>% 
+        sf::st_union()   #combines the provinces
+    
+    #creates a spatial object and adds geometry
+    temp <- sf::st_sf(provincia = "Maputo", geometry = temp) %>% 
+        mutate(shape_leng = st_length(.),
+               shape_area = st_area(.),
+               objectid_1 = "12"
+        )
+    
+    #removes the provinces that have been merged
+    old_province <- province_df %>%
+        filter(!provincia %in% provinces)
+    
+    #combines the old provinces with the merged province
+    temp <- rbind(old_province, temp)
+    
+    return(temp)
+    
+}
 
 # Read in the shapefile containing the provinces of Mozambique
-provinces <- st_read(PATH) %>%
-    st_sf() %>%
+original_provinces <- st_read(PATH) %>%
+    sf::st_sf() %>% #creates a SF object 
     clean_names() %>% 
-    select(-c(snu1uid, supported)) %>% 
-    mutate(provincia = recode(provincia, "Zambezia" = "Zambézia"))
-
-# Visualize the provinces to identify the ones you want to merge
-plot(provinces)
-
-# Select the provinces you want to merge
-province_to_merge <- provinces %>%
-    filter(provincia %in% c("Maputo", "Cidade De Maputo"))
-
-# Merge the selected provinces
-merged_province <- st_union(province_to_merge)
-# Convert merged province to sf object with the same structure as provinces
-merged_province_sf <- st_sf(provincia = "Maputo", geometry = merged_province) 
-
-#merged_province_sf$shape_leng <- st_length(merged_province_sf)
-#merged_province_sf$shape_area <- st_area(merged_province_sf$geometry)
-# Get the shape lengths of the original provinces
-shape_leng_province1 <- filter(province_to_merge, provincia == "Maputo")$shape_leng
-shape_leng_province2 <- filter(province_to_merge, provincia == "Cidade De Maputo")$shape_leng
+    select(-c(snu1uid, supported))
 
 
-# Calculate the total length of the merged geometry
-total_length_merged <- shape_leng_province1 + shape_leng_province2
+new_provinces <- original_provinces %>% 
+    merge_province(PROVINCES_TO_MERGE) %>% 
+    mutate(provincia_other = recode(provincia, "Zambezia" = "Zambézia"))  #Zambezia can be spelt differently
 
-# Update the merged province with the total length
-merged_province_sf$shape_leng <- total_length_merged
+#show merged provinces
+    plot(new_provinces)
 
-
-#------
-shape_area_province1 <- filter(province_to_merge, provincia == "Maputo")$shape_area
-shape_area_province2 <- filter(province_to_merge, provincia == "Cidade De Maputo")$shape_area
-
-
-# Calculate the total length of the merged geometry
-total_area_merged <- shape_area_province1 + shape_area_province2
-
-# Update the merged province with the total length
-merged_province_sf$shape_area <- total_area_merged
-merged_province_sf$shape_area <- round(merged_province_sf$shape_area, 1)
-
-
-merged_province_sf = merged_province_sf %>% 
-    mutate(objectid_1 = "12")
-
-
-# Remove the original provinces from the dataset
-provinces <- provinces %>%
-    filter(!provincia %in% c("Maputo", "Cidade De Maputo"))
-
-
-# Add the merged province back to the dataset
-provinces <- rbind(provinces, merged_province_sf)
-
-
-# Plot the updated dataset
-plot(provinces)
-
-sf::write_sf(provinces, "Dataout/provinces.shp")
-
-
-#-------------teste
-
-
-
-
-
+#write all spatial files
+sf::write_sf(new_provinces, paste0(OUTPUT,"merged_province.shp"))
+sf::st_write(new_provinces, paste0(OUTPUT,"merged_province.gpkg"))
+sf::st_write(new_provinces, paste0(OUTPUT,"merged_province.geojson"))
