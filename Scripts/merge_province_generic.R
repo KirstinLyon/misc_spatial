@@ -54,7 +54,7 @@ new_provinces <- original_provinces %>%
     merge_province(PROVINCES_TO_MERGE, NAME, COUNTRY, GID_0) 
 
 #show merged provinces
-    plot(new_provinces)
+plot(new_provinces)
 
 #write all spatial files
 sf::write_sf(new_provinces, paste0(OUTPUT,"merged_province.shp"))
