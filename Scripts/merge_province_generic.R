@@ -2,7 +2,8 @@ library(sf)
 library(janitor)
 library(tidyverse)
 
-PATH <-  "Data/provinces/MOz_Provinces.shp"
+#PATH <-  "Data/provinces/MOz_Provinces.shp"
+MOZ_EXAMPLE <- "Data/Moz/gadm41_MOZ_1.shp"
 PROVINCES_TO_MERGE <- c("Maputo", "Maputo City")
 NAME <-  "Maputo"
 COUNTRY <- "Mozambique"
@@ -42,19 +43,8 @@ merge_province <- function(province_df, provinces, name, country, gid_0){
 }
 
 
-# Specify the path to the zip file
-zip_file_path <- "Data_public/gadm41_MOZ_shp.zip"
-# Specify the directory where you want to extract the contents
-destination_dir <- "Data/Moz"
-
-# Unzip the folder
-unzip(zipfile = zip_file_path, exdir = destination_dir)
-
-moz_example <- "Data/Moz/gadm41_MOZ_1.shp"
-
-
 # Read in the shapefile containing the provinces of Mozambique
-original_provinces <- st_read(moz_example) %>%
+original_provinces <- st_read(MOZ_EXAMPLE) %>%
     sf::st_sf() %>% #creates a SF object 
     clean_names() 
 
